@@ -1,0 +1,45 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LeaveRequestController;
+use App\Http\Controllers\AdminLeaveController;
+
+// Dashboard route
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+    Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+});
+
+// Authentication routes (minimal manual setup)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+    Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+});
+
+// Profile routes (to fix profile.edit error)
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Employee leave request routes
+Route::middleware(['auth', 'role:Employee'])->group(function () {
+    Route::get('/leaves', [LeaveRequestController::class, 'index'])->name('leaves.index');
+    Route::get('/leaves/create', [LeaveRequestController::class, 'create'])->name('leaves.create');
+    Route::post('/leaves', [LeaveRequestController::class, 'store'])->name('leaves.store');
+});
+
+// Admin leave management routes
+Route::middleware(['auth', 'role:Admin'])->prefix('admin')->group(function () {
+    Route::get('/leaves', [AdminLeaveController::class, 'index'])->name('admin.leaves.index');
+    Route::patch('/leaves/{leaveRequest}/approve', [AdminLeaveController::class, 'approve'])->name('admin.leaves.approve');
+    Route::patch('/leaves/{leaveRequest}/reject', [AdminLeaveController::class, 'reject'])->name('admin.leaves.reject');
+});

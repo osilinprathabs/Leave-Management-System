@@ -13,21 +13,32 @@ class RoleUserSeeder extends Seeder
      */
     public function run(): void
     {
-         Role::create(['name' => 'Admin']);
-        Role::create(['name' => 'Employee']);
+        // Create or get existing roles
+        $adminRole = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $employeeRole = Role::firstOrCreate(['name' => 'Employee', 'guard_name' => 'web']);
 
-         $admin = User::create([
-            'name' => 'superadmin',
-            'email' => 'admin@gmail.com',
-            'password' => bcrypt('Test@123'),
-        ]);
+        // Create or get existing admin user
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'superadmin',
+                'password' => bcrypt('Test@123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
         $admin->assignRole('Admin');
 
-         $employee = User::create([
-            'name' => 'ramesh',
-            'email' => 'employee@gmail.com',
-            'password' => bcrypt('Test@123'),
-        ]);
+        // Create or get existing employee user
+        $employee = User::firstOrCreate(
+            ['email' => 'employee@gmail.com'],
+            [
+                'name' => 'ramesh',
+                'password' => bcrypt('Test@123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
         $employee->assignRole('Employee');
     }
 }
