@@ -195,9 +195,7 @@
                                                         </span>
                                                         @break
                                                 @endswitch
-                                                @if($leave->admin_remarks)
-                                                    <br><small class="text-muted">{{ Str::limit($leave->admin_remarks, 20) }}</small>
-                                                @endif
+                                        
                                             </td>
                                             <td>{{ $leave->admin_remarks }}</td>
                                             <td>{{ $leave->created_at->format('M d, Y') }}</td>
