@@ -41,6 +41,7 @@ class EmployeeController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Password::defaults()],
+       
         ]);
 
         $employee = User::create([
@@ -48,6 +49,7 @@ class EmployeeController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'email_verified_at' => now(),
+          
         ]);
 
         $employee->assignRole('Employee');
@@ -65,6 +67,7 @@ class EmployeeController extends Controller
             'pending_requests' => $employee->leaveRequests()->where('status', 'Pending')->count(),
             'approved_requests' => $employee->leaveRequests()->where('status', 'Approved')->count(),
             'rejected_requests' => $employee->leaveRequests()->where('status', 'Rejected')->count(),
+            'total_used_days' => $employee->getTotalUsedLeaveDays(),
         ];
         
         return view('admin.employees.show', compact('employee', 'leaveStats'));
@@ -80,12 +83,13 @@ class EmployeeController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $employee->id,
+ 
         ]);
 
         $employee->update([
             'name' => $request->name,
             'email' => $request->email,
-        ]);
+            ]);
 
         return redirect()->route('admin.employees.index')
             ->with('success', 'Employee updated successfully.');
