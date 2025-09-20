@@ -16,9 +16,6 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- Leave Balance Info -->
-                  
-
                     @if ($errors->any())
                         <div class="alert alert-danger">
                             <h6><i class="fas fa-exclamation-triangle"></i> Please correct the following errors:</h6>
@@ -117,29 +114,6 @@
     </div>
 </div>
 
-<!-- Success Modal -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="successModalLabel">
-                    <i class="fas fa-check-circle"></i> Success!
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
-                <h4>Leave Request Submitted Successfully!</h4>
-                <p class="text-muted">Your leave request has been submitted and will be reviewed by the admin.</p>
-                <p class="text-muted">You will receive an email notification once the status is updated.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const startDate = document.getElementById('start_date');
@@ -192,15 +166,12 @@ document.addEventListener('DOMContentLoaded', function() {
     endDate.addEventListener('change', calculateDuration);
     typeSelect.addEventListener('change', validateLeaveBalance);
 
-    // Handle form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Show loading state
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
         submitBtn.disabled = true;
         
-        // Submit the form
         fetch(form.action, {
             method: 'POST',
             body: new FormData(form),
@@ -209,35 +180,139 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .then(response => {
-            if (response.ok) {
-                // Show success modal
-                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                successModal.show();
+            if (response.ok && response.status === 200) {
+                const leaveType = typeSelect.options[typeSelect.selectedIndex].text;
+                const leaveDays = duration.value;
+                const startDateValue = startDate.value;
+                const endDateValue = endDate.value;
                 
-                // Reset form after modal is closed
-                document.getElementById('successModal').addEventListener('hidden.bs.modal', function() {
-                    form.reset();
-                    duration.value = '';
-                    duration.className = 'form-control';
-                    window.location.href = '{{ route("leaves.index") }}';
-                });
+                const confirmationMessage = `
+                    <div class="text-center">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h4 class="text-success">Leave Request Submitted Successfully!</h4>
+                        <div class="mt-3">
+                            <div class="alert alert-success">
+                                <strong>Details:</strong><br>
+                                <strong>Type:</strong> ${leaveType}<br>
+                                <strong>Duration:</strong> ${leaveDays}<br>
+                                <strong>Period:</strong> ${startDateValue} to ${endDateValue}
+                            </div>
+                        </div>
+                        <p class="text-muted mt-3">
+                            Your leave request has been submitted and will be reviewed by the admin.
+                        </p>
+                        <p class="text-muted">
+                            You will receive an email notification once the status is updated.
+                        </p>
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-success" onclick="window.location.href='{{ route("leaves.index") }}'">
+                                <i class="fas fa-list"></i> View Leave History
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary ms-2" onclick="this.closest('.alert').remove();">
+                                <i class="fas fa-times"></i> Close
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 500px;';
+                alertDiv.innerHTML = confirmationMessage;
+                
+                document.body.appendChild(alertDiv);
+                
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 10000);
+                
+                form.reset();
+                duration.value = '';
+                duration.className = 'form-control';
+                
             } else {
-                // Handle errors
-                return response.text().then(text => {
+                return response.json().then(data => {
+                    if (response.status === 422) {
+                        window.location.href = window.location.href;
+                    } else {
+                        throw new Error(data.message || 'Server error');
+                    }
+                }).catch(() => {
                     throw new Error('Server error');
                 });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while submitting the leave request. Please try again.');
+            const errorMessage = `
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Error!</strong> ${error.message || 'An error occurred while submitting the leave request. Please try again.'}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            const cardBody = document.querySelector('.card-body');
+            cardBody.insertAdjacentHTML('afterbegin', errorMessage);
         })
         .finally(() => {
-            // Reset button state
-            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Leave Request';
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Leave';
             submitBtn.disabled = false;
         });
     });
 });
 </script>
+
+<style>
+.alert-success {
+    border-left: 4px solid #28a745;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.alert-success .btn {
+    border-radius: 6px;
+    padding: 8px 16px;
+}
+
+.position-fixed {
+    position: fixed !important;
+}
+
+.fade.show {
+    opacity: 1;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.alert {
+    animation: slideInRight 0.3s ease-out;
+}
+
+.alert.removing {
+    animation: slideOutRight 0.3s ease-in;
+}
+</style>
 @endsection

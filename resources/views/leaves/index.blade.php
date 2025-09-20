@@ -8,6 +8,9 @@
                 <h1 class="h3 mb-0 text-gray-800">
                     <i class="fas fa-calendar-alt text-primary"></i> My Leave Requests
                 </h1>
+                <a href="{{ route('leaves.index') }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
                 <a href="{{ route('leaves.create') }}" class="btn btn-primary btn-lg">
                     <i class="fas fa-plus"></i> New Leave Request
                 </a>
